@@ -7,3 +7,5 @@ faiss-cpu
 pypdf
 python-dotenv
 sentence-transformers
+streamlit
+langchain-google-genai

@@ -1,105 +1,206 @@
 """
-Document processing agent using Groq LLM and LangChain tools.
+Personal RAG Concierge - Streamlit UI with Groq LLM and HuggingFace Embeddings.
 """
 
 import os
+import tempfile
 from dotenv import load_dotenv
+import streamlit as st
 
 # Load environment variables from .env file
 load_dotenv()
 
 from langchain_groq import ChatGroq
-from tools.document_tool import ingest_document, query_document
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.document_loaders import PyPDFLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# Initialize Groq LLM (updated model name; ChatGroq expects 'model')
+# Initialize Groq LLM (keep existing model)
 llm = ChatGroq(
     model="llama-3.3-70b-versatile",
-    temperature=0
+    temperature=0,
+    api_key=os.getenv("GROQ_API_KEY")
 )
-
-# Setup tools
-tools = [ingest_document, query_document]
 
 # System prompt for the agent
 system_prompt = (
-    "You are a helpful assistant. You can use two tools: ingest_document (to load a PDF) and query_document (to answer questions about previously ingested PDFs). "
-    "When needed, think step by step. If you need to call a tool, respond with:\n"
-    "Action: <tool name>\nAction Input: <input for tool>\n"
-    "Otherwise, just answer the user directly. After you receive an Observation you must produce a Final Answer."
+    "You are a helpful assistant that answers questions based on ingested PDF documents. "
+    "When the user asks a question, search the vector database and provide a grounded answer. "
+    "If no document has been ingested yet, politely ask the user to upload a PDF first."
 )
 
-tool_map = {t.name: t for t in tools}
 
-
-def run_agent(user_input: str) -> str:
+def ingest_document_streamlit(uploaded_file) -> str:
     """
-    Run the agent with user input.
+    Ingest a PDF file uploaded via Streamlit into the FAISS vector store.
     
     Args:
-        user_input: The user's question or command
+        uploaded_file: Streamlit UploadedFile object
+        
+    Returns:
+        Success message with statistics
+    """
+    try:
+        # Save uploaded file to temporary location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            tmp_file.write(uploaded_file.read())
+            tmp_path = tmp_file.name
+        
+        # Load the PDF document
+        loader = PyPDFLoader(tmp_path)
+        documents = loader.load()
+        
+        # Split documents into chunks
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200
+        )
+        chunks = text_splitter.split_documents(documents)
+        
+        # Initialize embeddings (runs locally on CPU)
+        embeddings = HuggingFaceEmbeddings(
+            model_name='sentence-transformers/all-MiniLM-L6-v2'
+        )
+        
+        # Create or update FAISS vector store in session state
+        if st.session_state.vector_db is None:
+            st.session_state.vector_db = FAISS.from_documents(chunks, embeddings)
+        else:
+            # Add to existing vector store
+            new_db = FAISS.from_documents(chunks, embeddings)
+            st.session_state.vector_db.merge_from(new_db)
+        
+        # Clean up temp file
+        os.unlink(tmp_path)
+        
+        return f"✅ Successfully ingested **{uploaded_file.name}**: {len(chunks)} chunks from {len(documents)} pages."
+    
+    except Exception as e:
+        return f"❌ Error ingesting document: {str(e)}"
+
+
+def query_agent(user_message: str) -> str:
+    """
+    Query the agent with a user message. Retrieves context from vector DB and uses LLM.
+    
+    Args:
+        user_message: The user's query
         
     Returns:
         The agent's response
     """
     try:
-        # First LLM call
+        # Check if vector database exists
+        if st.session_state.vector_db is None:
+            return "📄 Please upload a PDF document first using the file uploader above."
+        
+        # Retrieve relevant context from vector store
+        results = st.session_state.vector_db.similarity_search(user_message, k=3)
+        
+        if not results:
+            return "🔍 No relevant information found in the ingested documents."
+        
+        # Combine retrieved chunks
+        context = "\n\n---\n\n".join([doc.page_content for doc in results])
+        
+        # Build prompt with context
+        augmented_prompt = f"""Context from ingested documents:
+{context}
+
+---
+
+User question: {user_message}
+
+Please answer the question based on the context provided above. If the context doesn't contain relevant information, say so."""
+        
+        # Get LLM response
         response = llm.invoke([
             ("system", system_prompt),
-            ("user", user_input)
+            ("user", augmented_prompt)
         ])
-        content = getattr(response, "content", str(response))
-
-        if "Action:" in content and "Action Input:" in content:
-            # Parse tool invocation
-            lines = content.splitlines()
-            action_line = next((l for l in lines if l.startswith("Action:")), "")
-            input_line = next((l for l in lines if l.startswith("Action Input:")), "")
-            tool_name = action_line.replace("Action:", "").strip()
-            action_input = input_line.replace("Action Input:", "").strip()
-
-            if tool_name not in tool_map:
-                return f"Model requested unknown tool '{tool_name}'. Available: {list(tool_map.keys())}"
-
-            observation = tool_map[tool_name].invoke(action_input)
-
-            # Second LLM call with observation asking for final answer
-            followup = llm.invoke([
-                ("system", system_prompt),
-                ("user", user_input),
-                ("assistant", content),
-                ("user", f"Observation: {observation}\nPlease provide Final Answer.")
-            ])
-            return getattr(followup, "content", str(followup))
-        else:
-            return content
+        
+        return getattr(response, "content", str(response))
+    
     except Exception as e:
-        return f"Error running agent loop: {e}"
+        return f"❌ Error querying agent: {str(e)}"
+
+
+def main():
+    """Main Streamlit application."""
+    
+    st.set_page_config(
+        page_title="Personal RAG Concierge",
+        page_icon="📚",
+        layout="centered"
+    )
+    
+    st.title("📚 Personal RAG Concierge")
+    st.markdown("*Chat securely with your own documents—fast, local, private.*")
+    
+    # Check API key
+    if not os.getenv('GROQ_API_KEY'):
+        st.error("⚠️ GROQ_API_KEY not found in environment variables. Please add it to your .env file.")
+        st.stop()
+    
+    # Initialize session state
+    if 'vector_db' not in st.session_state:
+        st.session_state.vector_db = None
+    
+    if 'chat_history' not in st.session_state:
+        st.session_state.chat_history = []
+    
+    # Sidebar for file upload
+    with st.sidebar:
+        st.header("📄 Document Upload")
+        uploaded_file = st.file_uploader(
+            "Upload a PDF document",
+            type=['pdf'],
+            help="Upload a PDF to ingest into the RAG system"
+        )
+        
+        if uploaded_file is not None:
+            if st.button("📥 Ingest Document"):
+                with st.spinner("Processing document..."):
+                    result = ingest_document_streamlit(uploaded_file)
+                    st.success(result)
+        
+        st.divider()
+        st.markdown("### 🔧 Tech Stack")
+        st.markdown("""
+        - **LLM:** Groq (Llama-3.3-70B)
+        - **Embeddings:** HuggingFace MiniLM
+        - **Vector Store:** FAISS
+        - **Framework:** LangChain
+        """)
+        
+        if st.button("🗑️ Clear Chat History"):
+            st.session_state.chat_history = []
+            st.rerun()
+    
+    # Display chat history
+    for message in st.session_state.chat_history:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    
+    # Chat input
+    if user_input := st.chat_input("Ask a question about your documents..."):
+        # Add user message to history
+        st.session_state.chat_history.append({"role": "user", "content": user_input})
+        
+        # Display user message
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        
+        # Get agent response
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = query_agent(user_input)
+                st.markdown(response)
+        
+        # Add assistant response to history
+        st.session_state.chat_history.append({"role": "assistant", "content": response})
 
 
 if __name__ == "__main__":
-    # Example usage
-    print("Document Processing Agent")
-    print("=" * 50)
-    
-    # Check if GROQ_API_KEY is set
-    if not os.getenv('GROQ_API_KEY'):
-        print("Warning: GROQ_API_KEY environment variable is not set!")
-        print("Please set it before running the agent.")
-    else:
-        print("Agent initialized successfully!")
-        print("\nExample commands:")
-        print("1. Ingest a document: 'Load the PDF file at /path/to/document.pdf'")
-        print("2. Query a document: 'What is the main topic discussed in the document?'")
-        print("\n" + "=" * 50)
-        
-        # Interactive loop
-        while True:
-            user_input = input("\nYou: ").strip()
-            if user_input.lower() in ['exit', 'quit', 'q']:
-                print("Goodbye!")
-                break
-            if not user_input:
-                continue
-                
-            response = run_agent(user_input)
-            print(f"\nAgent: {response}")
+    main()
