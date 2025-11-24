@@ -187,19 +187,38 @@ def main():
     if user_input := st.chat_input("Ask a question about your documents..."):
         # Add user message to history
         st.session_state.chat_history.append({"role": "user", "content": user_input})
-        
+
         # Display user message
         with st.chat_message("user"):
             st.markdown(user_input)
-        
-        # Get agent response
+
+        # Get agent response with cleanup logic
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
-                response = query_agent(user_input)
-                st.markdown(response)
-        
+                raw_output = query_agent(user_input)
+
+                # --- CLEANUP LOGIC START ---
+                # If the model returned a serialized list of content parts, extract the first 'text'.
+                try:
+                    import ast
+                    if isinstance(raw_output, str) and raw_output.strip().startswith("["):
+                        parsed = ast.literal_eval(raw_output)
+                        if (
+                            isinstance(parsed, list)
+                            and parsed
+                            and isinstance(parsed[0], dict)
+                            and "text" in parsed[0]
+                        ):
+                            raw_output = parsed[0]["text"]
+                except Exception:
+                    # If cleanup fails, keep original output.
+                    pass
+                # --- CLEANUP LOGIC END ---
+
+                st.write(raw_output)
+
         # Add assistant response to history
-        st.session_state.chat_history.append({"role": "assistant", "content": response})
+        st.session_state.chat_history.append({"role": "assistant", "content": raw_output})
 
 
 if __name__ == "__main__":
