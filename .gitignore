@@ -1,0 +1,76 @@
+# ==== Python Project Git Ignore ====
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment & secrets
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Packaging / installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Test & coverage caches
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+.pytest_cache/
+.nox/
+.tox/
+.hypothesis/
+
+# Type checking / lint caches
+.mypy_cache/
+.pyre/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Tooling
+.pyre_configuration.local
+
+# VS Code settings
+.vscode/
+
+# IDEs/editors
+.idea/
+*.swp
+*.swo
+
+# OS / metadata
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local config / runtime
+.python-version
+
+# PDFs (avoid committing personal documents)
+*.pdf
+
+# Other common ignores
+*.dump
+*.bak
+
+# Temporary files
+*.tmp
+~$*
+
+# End of file
