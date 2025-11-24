@@ -1,5 +1,7 @@
 langchain-core
 langchain-community
+langchain
+langchain-google-genai
 langchain-groq
 langchain-huggingface
 langchain-text-splitters
@@ -8,4 +10,3 @@ pypdf
 python-dotenv
 sentence-transformers
 streamlit
-langchain-google-genai

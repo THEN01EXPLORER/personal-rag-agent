@@ -1,5 +1,5 @@
 """
-Personal RAG Concierge - Streamlit UI with Groq LLM and HuggingFace Embeddings.
+Personal RAG Concierge - Streamlit UI with Google Gemini and HuggingFace Embeddings.
 """
 
 import os
@@ -10,17 +10,17 @@ import streamlit as st
 # Load environment variables from .env file
 load_dotenv()
 
-from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
-# Initialize Groq LLM (keep existing model)
-llm = ChatGroq(
-    model="llama-3.3-70b-versatile",
+# Initialize Google Gemini LLM
+llm = ChatGoogleGenerativeAI(
+    model="gemini-flash-latest",
     temperature=0,
-    api_key=os.getenv("GROQ_API_KEY")
+    google_api_key=os.getenv("GOOGLE_API_KEY")
 )
 
 # System prompt for the agent
@@ -139,8 +139,8 @@ def main():
     st.markdown("*Chat securely with your own documents—fast, local, private.*")
     
     # Check API key
-    if not os.getenv('GROQ_API_KEY'):
-        st.error("⚠️ GROQ_API_KEY not found in environment variables. Please add it to your .env file.")
+    if not os.getenv('GOOGLE_API_KEY'):
+        st.error("⚠️ GOOGLE_API_KEY not found in environment variables. Please add it to your .env file.")
         st.stop()
     
     # Initialize session state
@@ -168,7 +168,7 @@ def main():
         st.divider()
         st.markdown("### 🔧 Tech Stack")
         st.markdown("""
-        - **LLM:** Groq (Llama-3.3-70B)
+        - **LLM:** Google Gemini Flash (latest)
         - **Embeddings:** HuggingFace MiniLM
         - **Vector Store:** FAISS
         - **Framework:** LangChain

@@ -1,6 +1,4 @@
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-from langchain.agents import AgentExecutor
+from langchain_core.prompts import PromptTemplate
 
 class RAGChain:
     def __init__(self, llm, tools):
@@ -10,13 +8,12 @@ class RAGChain:
             input_variables=["input"],
             template="You are a helpful assistant. Answer the following question: {input}"
         )
-        self.chain = LLMChain(llm=self.llm, prompt=self.prompt_template)
 
-    def run(self, input_text):
-        response = self.chain.run(input_text)
-        return response
+    def run(self, input_text: str):
+        prompt = self.prompt_template.format(input=input_text)
+        result = self.llm.invoke(prompt)
+        return getattr(result, "content", str(result))
 
-    def execute_agent(self, user_input):
-        agent_executor = AgentExecutor(agent=self.llm, tools=self.tools)
-        result = agent_executor.run(user_input)
-        return result
+    def execute_agent(self, user_input: str):
+        # Minimal passthrough to LLM; tool wiring would be added here if needed
+        return self.run(user_input)
