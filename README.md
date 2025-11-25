@@ -10,52 +10,25 @@
 
 ## 📖 Overview
 
-**Personal RAG Concierge** is a privacy-first AI agent that enables users to chat with their PDF documents using Retrieval-Augmented Generation (RAG). Unlike cloud-based solutions that upload sensitive files to remote servers, this system keeps documents local while generating lightweight embeddings for semantic search.
-
-Powered by **Google Gemini Flash** for blazing-fast inference and **FAISS** for efficient local vector storage, the agent provides grounded, context-aware answers in real-time. Built with **Streamlit**, it offers a clean, intuitive interface perfect for researchers, students, and professionals who need instant insights from their personal knowledge base.
-
-**How it works:**
-1. Upload PDF documents via the Streamlit UI
-2. Documents are chunked and embedded locally using HuggingFace's `all-MiniLM-L6-v2` model
-3. Embeddings are stored in a FAISS vector database (in-memory)
-4. Ask natural language questions—the agent retrieves relevant context and generates grounded answers using Google Gemini
-5. All processing happens locally except for LLM inference calls—only text queries are sent to the API, never raw documents
+Personal RAG Concierge is a privacy-first RAG agent for conversational Q&A over PDF documents. It uses a Streamlit UI for uploads, HuggingFace MiniLM embeddings (all-MiniLM-L6-v2) for local vectorization, FAISS for fast similarity search, and Google Gemini Flash for generation. Documents are chunked and embedded locally; only compact query text and retrieved snippets are sent to the LLM.
 
 ## ✨ Key Features
 
-### 🔧 Multi-Agent Tooling
-Custom-built ingestion and retrieval tools using LangChain, enabling modular document processing and semantic search capabilities.
-
-### 🧠 Session Memory
-Maintains conversation context across multiple queries within a session, allowing for follow-up questions and deeper exploration of document content.
-
-### ⚡ Google Gemini Powered
-Leverages **Google Gemini Flash** (`gemini-flash-latest`) for sub-second reasoning and response generation, ensuring a smooth conversational experience.
-
-### 🎨 Clean Streamlit UI
-Modern, responsive interface featuring:
-- Drag-and-drop PDF upload
-- Real-time chat interface
-- Sidebar document management
-- Chat history persistence per session
-- Smart output parsing for clean responses
-
-### 🔒 Privacy-First Architecture
-- Documents remain on local storage during processing
-- Only text embeddings (dense vectors) are stored—no raw document text sent to external services
-- FAISS vector store runs entirely in-memory or can be persisted locally
-- API keys secured via environment variables
+- Multi-agent LangChain tools for ingestion and retrieval
+- Session memory for natural follow-ups
+- Fast generation via Google Gemini Flash
+- Clean Streamlit UI with upload, chat, and history
+- Privacy-first design: local embeddings and secure API keys
 
 ## 🛠️ Tech Stack
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Frontend** | Streamlit | Interactive web UI |
-| **LLM** | Google Gemini Flash | Fast language model inference |
-| **Embeddings** | HuggingFace MiniLM | Local document embedding |
-| **Vector Store** | FAISS | Similarity search engine |
-| **Framework** | LangChain | RAG orchestration |
-| **Processing** | PyPDF, RecursiveCharacterTextSplitter | Document chunking |
+| Component | Technology |
+|-----------|------------|
+| Frontend | Streamlit |
+| LLM | Google Gemini Flash |
+| Embeddings | HuggingFace MiniLM |
+| Vector Store | FAISS |
+| Orchestration | LangChain |
 
 ## 🚀 Quick Start
 
