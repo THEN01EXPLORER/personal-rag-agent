@@ -10,62 +10,105 @@
 
 ## 📖 Overview
 
-**Personal RAG Concierge** is a privacy-first AI agent enabling users to chat with PDF documents using Retrieval-Augmented Generation (RAG). Powered by **Google Gemini Flash** and **FAISS** vector storage, it provides instant, grounded answers while keeping documents local.
+**Personal RAG Concierge** is a privacy-first AI agent that enables users to chat with their PDF documents using Retrieval-Augmented Generation (RAG). Unlike cloud-based solutions that upload sensitive files to remote servers, this system keeps documents local while generating lightweight embeddings for semantic search.
 
-**Key Workflow:**
-1. Upload PDFs via Streamlit UI
-2. Documents chunked and embedded locally (HuggingFace `all-MiniLM-L6-v2`)
-3. FAISS stores embeddings in-memory
-4. Ask questions—agent retrieves context and generates answers via Gemini
-5. Only queries sent to API, never raw documents
+Powered by **Google Gemini Flash** for blazing-fast inference and **FAISS** for efficient local vector storage, the agent provides grounded, context-aware answers in real-time. Built with **Streamlit**, it offers a clean, intuitive interface perfect for researchers, students, and professionals who need instant insights from their personal knowledge base.
 
-## ✨ Features
+**How it works:**
+1. Upload PDF documents via the Streamlit UI
+2. Documents are chunked and embedded locally using HuggingFace's `all-MiniLM-L6-v2` model
+3. Embeddings are stored in a FAISS vector database (in-memory)
+4. Ask natural language questions—the agent retrieves relevant context and generates grounded answers using Google Gemini
+5. All processing happens locally except for LLM inference calls—only text queries are sent to the API, never raw documents
 
-- **Multi-Agent Tooling:** Custom LangChain tools for ingestion and retrieval
-- **Session Memory:** Maintains conversation context for follow-ups
-- **Google Gemini Flash:** Sub-second reasoning with `gemini-flash-latest`
-- **Clean Streamlit UI:** Drag-and-drop upload, real-time chat, history persistence
-- **Privacy-First:** Local embeddings, in-memory vector store, secure API keys
+## ✨ Key Features
+
+### 🔧 Multi-Agent Tooling
+Custom-built ingestion and retrieval tools using LangChain, enabling modular document processing and semantic search capabilities.
+
+### 🧠 Session Memory
+Maintains conversation context across multiple queries within a session, allowing for follow-up questions and deeper exploration of document content.
+
+### ⚡ Google Gemini Powered
+Leverages **Google Gemini Flash** (`gemini-flash-latest`) for sub-second reasoning and response generation, ensuring a smooth conversational experience.
+
+### 🎨 Clean Streamlit UI
+Modern, responsive interface featuring:
+- Drag-and-drop PDF upload
+- Real-time chat interface
+- Sidebar document management
+- Chat history persistence per session
+- Smart output parsing for clean responses
+
+### 🔒 Privacy-First Architecture
+- Documents remain on local storage during processing
+- Only text embeddings (dense vectors) are stored—no raw document text sent to external services
+- FAISS vector store runs entirely in-memory or can be persisted locally
+- API keys secured via environment variables
 
 ## 🛠️ Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| **Frontend** | Streamlit |
-| **LLM** | Google Gemini Flash |
-| **Embeddings** | HuggingFace MiniLM |
-| **Vector Store** | FAISS |
-| **Framework** | LangChain |
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Frontend** | Streamlit | Interactive web UI |
+| **LLM** | Google Gemini Flash | Fast language model inference |
+| **Embeddings** | HuggingFace MiniLM | Local document embedding |
+| **Vector Store** | FAISS | Similarity search engine |
+| **Framework** | LangChain | RAG orchestration |
+| **Processing** | PyPDF, RecursiveCharacterTextSplitter | Document chunking |
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.11+
-- [Google API Key](https://aistudio.google.com/app/apikey)
+- Python 3.11 or higher
+- Google API Key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 
-### Installation
+### Installation Steps
 
 ```bash
-# Clone repository
+# Clone the repository
 git clone https://github.com/THEN01EXPLORER/personal-rag-agent.git
 cd capstone
 
-# Create virtual environment
+# Create and activate virtual environment
 python -m venv venv
-source venv/Scripts/activate  # Windows Git Bash
-# OR: venv\Scripts\activate.bat (Windows CMD)
+
+# Windows (Git Bash)
+source venv/Scripts/activate
+
+# Windows (Command Prompt)
+venv\Scripts\activate.bat
+
+# macOS/Linux
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Create .env file
-echo "GOOGLE_API_KEY=your_key_here" > .env
+# Create environment file
+echo "GOOGLE_API_KEY=your_api_key_here" > .env
 
-# Run application
+# Run the application
 streamlit run agent.py
 ```
 
-App opens at `http://localhost:8501`
+The app will open automatically at `http://localhost:8501`
+
+### Usage Workflow
+
+1. **Upload Document:** Use the sidebar file uploader to select a PDF document
+2. **Ingest Content:** Click "📥 Ingest Document" to process and embed the content
+3. **Ask Questions:** Type your questions in the chat input at the bottom
+4. **Get Answers:** The agent retrieves relevant context and provides grounded responses
+
+### Example Session
+```
+User: What are the main findings in this research paper?
+Agent: Based on the document, the main findings include...
+
+User: Can you elaborate on the methodology?
+Agent: The methodology section describes a three-phase approach...
+```
 
 ## 🎥 Demo
 
@@ -74,81 +117,160 @@ App opens at `http://localhost:8501`
 
 ![Personal RAG Concierge UI](image.png)
 
-## 🌐 Deployment
+## 🌐 Deployment to Streamlit Cloud
 
-Deploy to Streamlit Cloud in minutes:
-1. Push code to GitHub
-2. Go to [share.streamlit.io](https://share.streamlit.io/) → "New app"
-3. Select repo, branch (`main`), file (`agent.py`)
-4. Add API key in Settings → Secrets:
+### Deployment Steps
+
+1. **Push your code to GitHub:**
+```bash
+git add .
+git commit -m "Ready for deployment"
+git push origin main
+```
+
+2. **Deploy to Streamlit Cloud:**
+   - Navigate to [share.streamlit.io](https://share.streamlit.io/)
+   - Click "New app"
+   - Select your repository, branch (`main`), and main file (`agent.py`)
+   - Click "Deploy"
+
+3. **Configure API Key as Secret:**
+   - In your Streamlit Cloud dashboard, access app settings
+   - Navigate to "Secrets" section
+   - Add your API key in TOML format:
    ```toml
-   GOOGLE_API_KEY = "your_key_here"
+   GOOGLE_API_KEY = "your_google_api_key_here"
    ```
-5. Deploy and access at `https://[app-name].streamlit.app`
+   - Save and reboot the application
+
+4. **Access your deployed app:**
+   - Your live app will be available at `https://[your-app-name].streamlit.app`
+
+**Note:** For local development, use a `.env` file. For Streamlit Cloud, always use the Secrets management feature to keep your API keys secure.
 
 ## 📁 Project Structure
 
 ```
 capstone/
-├── agent.py              # Main Streamlit app
-├── requirements.txt      # Dependencies
-├── .env                  # API keys (local)
-├── python-rag-agent-project/
-│   ├── agent.py          # Alternative implementation
-│   ├── tools/            # Document processing
-│   └── rag/              # RAG components
-└── tools/                # Shared utilities
+├── agent.py                      # Main Streamlit application
+├── requirements.txt               # Python dependencies
+├── .env                          # Environment variables (local only)
+├── .gitignore                    # Git ignore rules
+├── README.md                     # Project documentation
+├── python-rag-agent-project/     # Additional RAG modules
+│   ├── agent.py                  # Alternative implementation
+│   ├── tools/
+│   │   └── document_tool.py      # Document processing tools
+│   └── rag/
+│       ├── embeddings.py         # Embedding utilities
+│       ├── vectorstore.py        # Vector store management
+│       ├── loader.py             # Document loaders
+│       ├── chain.py              # RAG chain implementation
+│       └── config.py             # Configuration management
+└── tools/
+    └── document_tool.py          # Shared document utilities
 ```
+
+## 🔒 Security & Privacy
+
+### Data Handling Philosophy
+- **Local Processing:** PDF documents are processed locally and temporarily stored only during ingestion
+- **Embedding Storage:** Only vectorized embeddings are retained—no raw document text is stored long-term
+- **API Communication:** Only user queries and retrieved context snippets are sent to Google Gemini API
+- **No Cloud Storage:** Documents never leave your machine except as processed query context
+
+### Best Practices
+- Never commit your `.env` file or API keys to version control
+- Use environment variables for all sensitive credentials
+- For production deployments, consider adding authentication, rate limiting, and encrypted storage
+- Be mindful of sensitive documents—this is a demonstration prototype
+
+⚠️ **Compliance Note:** Do not ingest regulated documents (HIPAA, GDPR-protected, classified information) without implementing additional safeguards.
 
 ## 🎯 Use Cases
 
-- Academic research papers and theses
-- Legal contracts and case files
-- Technical documentation and APIs
-- Personal knowledge management
-- Business reports and market analysis
+- **Academic Research:** Query research papers, theses, and academic literature for instant insights
+- **Legal Document Review:** Search through contracts, case files, and legal briefs efficiently
+- **Technical Documentation:** Navigate API docs, user manuals, and technical specifications
+- **Personal Knowledge Management:** Build a searchable archive of articles, notes, and reports
+- **Business Intelligence:** Analyze market reports, financial statements, and business plans
 
 ## 🔮 Future Enhancements
 
-- [ ] Persistent vector store for cross-session retention
-- [ ] Multi-format support (DOCX, TXT, Markdown)
-- [ ] Source citations with page numbers
-- [ ] Hybrid search (BM25 + semantic)
-- [ ] Multi-user authentication
-- [ ] REST API endpoint
-- [ ] Batch folder uploads
+### Planned Features
+- [ ] **Persistent Vector Store:** Save FAISS index to disk for cross-session document retention
+- [ ] **Multi-format Support:** Add support for DOCX, TXT, Markdown, and web scraping
+- [ ] **Source Citations:** Display page numbers and document names in answers
+- [ ] **Advanced Reranking:** Implement hybrid search (BM25 + semantic) for improved retrieval
+- [ ] **Multi-user Authentication:** Add user login and document isolation for shared deployments
+- [ ] **REST API Endpoint:** Expose programmatic access for integrations
+- [ ] **Batch Processing:** Support folder uploads and bulk document ingestion
+- [ ] **Observability:** Integrate tracing and metrics (LangSmith, Weights & Biases)
+
+### Extensibility Options
+The modular architecture makes it easy to swap components:
+- **LLM:** Replace Gemini with Groq, OpenAI, Anthropic, or local models
+- **Embeddings:** Use OpenAI embeddings, Cohere, or custom fine-tuned models
+- **Vector Store:** Migrate to Pinecone, Weaviate, or Qdrant for production scale
+- **UI:** Build a React frontend or mobile app using the core RAG logic
 
 ## 🏆 Hackathon Submission
 
-**Competition:** Kaggle Agents Intensive - Capstone Project
+**Competition:** Kaggle Community Hackathon - Agents Intensive Capstone Project
 
-### Why This Project Stands Out
+### Why Personal RAG Concierge Stands Out
 
-1. **Real User Value:** Instant Q&A over personal documents without cloud upload
-2. **High Performance:** Gemini Flash delivers sub-second responses
-3. **Privacy-First:** Documents stay local; only embeddings generated
-4. **Production-Ready:** Modular architecture with clean separation
-5. **Zero Learning Curve:** Intuitive Streamlit interface
+1. **Real User Value:** Solves a genuine pain point—instant Q&A over personal documents without cloud upload friction
+2. **High Performance:** Google Gemini Flash delivers sub-second responses with high-quality reasoning
+3. **Privacy-First Design:** Documents stay local; only embeddings are generated for search
+4. **Production-Ready Architecture:** Modular design with clear separation of concerns
+5. **Zero Learning Curve:** Intuitive Streamlit interface requires no technical expertise
 
 ### Technical Highlights
 
-- **Complete RAG Pipeline:** Chunking, embedding, retrieval, and generation
-- **LangChain Integration:** Industry-standard orchestration
-- **Local Embeddings:** CPU-only, no GPU required
-- **Session Context:** Follow-up question support
-- **Smart Parsing:** Automatic cleanup of nested LLM responses
-- **Cost-Effective:** Free Gemini API + local embeddings
-- **Extensible:** Easy to swap LLMs, embeddings, or vector stores
+- **Complete RAG Pipeline:** Full implementation of chunking, embedding, retrieval, and generation workflow
+- **LangChain Integration:** Leverages industry-standard orchestration framework for robust agent behavior
+- **Local Embeddings:** HuggingFace SentenceTransformers run on CPU—no GPU required
+- **Session Context Management:** Maintains conversation history for natural follow-up questions
+- **Smart Output Parsing:** Automatically cleans nested response structures from LLM API
+- **Cost-Effective Solution:** Uses free Google Gemini API and local embeddings (no paid vector database)
+- **Extensible Design:** Easy to swap LLMs, embeddings, or vector stores for different use cases
+- **Educational Value:** Clean, well-documented code demonstrating RAG best practices
+
+### Innovation Points
+
+- **Zero-config Setup:** Works out of the box with just an API key—no complex configuration needed
+- **Privacy Without Compromise:** Maintains data privacy while delivering cloud-level performance
+- **Deployment Ready:** One-click deployment to Streamlit Cloud with full documentation
+- **Real-world Application:** Immediately useful for researchers, professionals, and students
 
 ## 🐛 Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| `GOOGLE_API_KEY not found` | Add key to `.env` file |
-| Slow first run | Models download once, then cached |
-| Empty answers | Re-upload PDF, check ingestion success |
-| Unicode errors | Re-save PDF as text-based |
-| Model 404 error | Code uses `gemini-flash-latest` |
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| `GOOGLE_API_KEY not found` | Missing or incorrect `.env` file | Verify `.env` exists in project root with valid key |
+| Slow first run | Model downloads on initial use | Subsequent runs are much faster; models are cached locally |
+| Empty/irrelevant answers | Document not properly ingested | Re-upload PDF and ensure "✅ Successfully ingested" message appears |
+| Unicode errors during load | Malformed or encrypted PDF | Try re-saving the PDF or converting to text-based format |
+| Out of memory error | Very large PDF files | Split document into smaller files or increase system RAM |
+| Model not found (404) | Outdated model name in code | Verify code uses `gemini-flash-latest` model identifier |
+
+### Getting Additional Help
+- Check the [Issues](https://github.com/THEN01EXPLORER/personal-rag-agent/issues) page for known problems and solutions
+- Review [LangChain documentation](https://python.langchain.com/) for RAG pipeline details
+- Consult [Streamlit docs](https://docs.streamlit.io/) for UI customization options
+- Refer to [Google AI Studio](https://aistudio.google.com/) for API key and model information
+
+## 🤝 Contributing
+
+Contributions are welcome! To contribute:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+Please ensure your code follows existing style conventions and includes appropriate documentation.
 
 ## 📧 Contact
 
