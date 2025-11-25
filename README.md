@@ -162,7 +162,7 @@ For local development, use a `.env` file. For Streamlit Cloud, use the Secrets m
 ## 🎥 Demo
 
 ### Live Demo
-🔗 **[Watch Demo Video](#)** *(Coming Soon)*
+🔗 **[Watch Demo Video](https://youtu.be/1U8ETtSHhR4)**
 
 ### Screenshots
 
