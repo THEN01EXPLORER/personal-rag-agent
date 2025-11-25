@@ -161,12 +161,16 @@ For local development, use a `.env` file. For Streamlit Cloud, use the Secrets m
 
 ## 🎥 Demo
 
-### Live Demo
+### 🌐 Live Deployment
+🚀 **[Try the Live App](https://agentpy-gzmxf4kwamofut5acnf3v5.streamlit.app/)**
+
+### 🎬 Video Demo
 🔗 **[Watch Demo Video](https://youtu.be/1U8ETtSHhR4)**
 
-### Screenshots
+### 📸 Screenshots
 
-*Coming soon: Add screenshots of the UI showing document upload, chat interface, and example Q&A sessions.*
+![Personal RAG Concierge UI](image.png)
+*Main interface showing document upload, tech stack, and chat interface*
 
 ## 📁 Project Structure
 
