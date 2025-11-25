@@ -198,21 +198,41 @@ def main():
                 raw_output = query_agent(user_input)
 
                 # --- CLEANUP LOGIC START ---
-                # If the model returned a serialized list of content parts, extract the first 'text'.
+                # Handle various malformed output formats from Gemini API
+                import ast
+                import json
+                
+                def extract_text(data):
+                    """Recursively extract text content from various response formats."""
+                    if isinstance(data, str):
+                        # Try parsing as JSON/Python literal
+                        for parser in (json.loads, ast.literal_eval):
+                            try:
+                                data = parser(data)
+                                break
+                            except:
+                                continue
+                    
+                    # Handle list of content objects
+                    if isinstance(data, list) and data:
+                        data = data[0]
+                    
+                    # Handle dict with 'text' key
+                    if isinstance(data, dict):
+                        if "text" in data:
+                            return data["text"]
+                        # Handle nested content structures
+                        for key in ("content", "message", "output"):
+                            if key in data:
+                                return extract_text(data[key])
+                    
+                    # Return as-is if no extraction succeeded
+                    return data if isinstance(data, str) else str(data)
+                
                 try:
-                    import ast
-                    if isinstance(raw_output, str) and raw_output.strip().startswith("["):
-                        parsed = ast.literal_eval(raw_output)
-                        if (
-                            isinstance(parsed, list)
-                            and parsed
-                            and isinstance(parsed[0], dict)
-                            and "text" in parsed[0]
-                        ):
-                            raw_output = parsed[0]["text"]
+                    raw_output = extract_text(raw_output)
                 except Exception:
-                    # If cleanup fails, keep original output.
-                    pass
+                    pass  # Keep original if all parsing fails
                 # --- CLEANUP LOGIC END ---
 
                 st.write(raw_output)
